@@ -1,0 +1,27 @@
+name: waste_lens_example
+description: >-
+  The "Evidence Ledger" — a forensic demo where each screen deliberately
+  commits one kind of waste and the waste_lens overlay catches it live.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.6.0
+  flutter: ">=3.24.0"
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  waste_lens: ^0.1.0
+  waste_lens_dio: ^0.1.0
+  dio: ^5.9.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

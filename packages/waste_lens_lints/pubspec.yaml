@@ -1,0 +1,32 @@
+name: waste_lens_lints
+description: >-
+  custom_lint rules for waste_lens: missing dispose, non-const widgets,
+  setState during build, and images without cache dimensions.
+version: 0.1.0
+repository: https://github.com/poojadev/waste_lens
+issue_tracker: https://github.com/poojadev/waste_lens/issues
+topics:
+  - performance
+  - lints
+  - debugging
+
+environment:
+  sdk: ^3.6.0
+  flutter: ">=3.24.0"
+
+resolution: workspace
+
+dependencies:
+  # custom_lint_builder re-exports custom_lint_core; let it pull analyzer.
+  analyzer: ^8.4.0
+  custom_lint_builder: ^0.8.1
+
+dev_dependencies:
+  # Dev-only: lets the rule tests resolve real Flutter widgets in fixtures.
+  # Not a runtime dependency — consumers of the lints never pull Flutter.
+  flutter:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+  custom_lint: ^0.8.1
+  flutter_lints: ^6.0.0
