@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:waste_lens/waste_lens.dart';
 
+import '../format.dart';
 import '../ledger_theme.dart';
 import '../widgets/dossier.dart';
 
@@ -62,7 +63,7 @@ class _ExhibitDMemoryState extends State<ExhibitDMemory> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _formatBytes(aggregates.latestRssBytes),
+                      formatBytes(aggregates.latestRssBytes),
                       style: Ledger.data.copyWith(
                         fontSize: 30,
                         fontWeight: FontWeight.w700,
@@ -72,15 +73,15 @@ class _ExhibitDMemoryState extends State<ExhibitDMemory> {
                     SizedBox(
                       height: 64,
                       width: double.infinity,
-                      child: CustomPaint(
-                        painter: _RssSparkline(series),
-                      ),
+                      child: series.length < 2
+                          ? Text('sampling…', style: Ledger.body)
+                          : Sparkline(values: series, color: Ledger.charge),
                     ),
                     const SizedBox(height: 12),
                     _row('Ballast held', '${_ballast.length} × 8 MB'),
                     _row(
                       'Image cache budget',
-                      _formatBytes(aggregates.imageCache?.maxSizeBytes ?? 0),
+                      formatBytes(aggregates.imageCache?.maxSizeBytes ?? 0),
                     ),
                   ],
                 );
@@ -127,59 +128,4 @@ class _ExhibitDMemoryState extends State<ExhibitDMemory> {
           ],
         ),
       );
-
-  static String _formatBytes(int bytes) {
-    if (bytes <= 0) return '0 B';
-    const units = ['B', 'KB', 'MB', 'GB'];
-    var size = bytes.toDouble();
-    var unit = 0;
-    while (size >= 1024 && unit < units.length - 1) {
-      size /= 1024;
-      unit++;
-    }
-    return '${size.toStringAsFixed(size >= 100 || unit == 0 ? 0 : 1)} ${units[unit]}';
-  }
-}
-
-class _RssSparkline extends CustomPainter {
-  _RssSparkline(this.values);
-
-  final List<double> values;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (values.length < 2) {
-      final tp = TextPainter(
-        text: TextSpan(text: 'sampling…', style: Ledger.body),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tp.paint(canvas, Offset(0, size.height / 2 - tp.height / 2));
-      return;
-    }
-    var min = values.first, max = values.first;
-    for (final v in values) {
-      if (v < min) min = v;
-      if (v > max) max = v;
-    }
-    final range = (max - min).abs() < 1 ? 1.0 : max - min;
-    final dx = size.width / (values.length - 1);
-    final path = Path();
-    for (var i = 0; i < values.length; i++) {
-      final x = dx * i;
-      final y = size.height - ((values[i] - min) / range) * size.height;
-      i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
-    }
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = Ledger.charge
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..strokeJoin = StrokeJoin.round
-        ..isAntiAlias = true,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_RssSparkline old) => old.values != values;
 }

@@ -1,3 +1,8 @@
+## 0.1.1
+
+- Export `Sparkline`, the dependency-free mini line-chart used by the overlay,
+  so apps can reuse it for their own diagnostics widgets.
+
 ## 0.1.0
 
 Initial release.

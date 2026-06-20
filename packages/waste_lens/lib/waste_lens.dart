@@ -20,5 +20,6 @@ export 'src/leaks/leak_watcher.dart' show LeakWatcher;
 export 'src/memory/memory_module.dart' show MemoryModule;
 export 'src/optimize/auto_dispose_mixin.dart';
 export 'src/optimize/image_cache_tuner.dart';
+export 'src/overlay/sparkline.dart' show Sparkline;
 export 'src/rebuilds/dead_rebuild_probe.dart';
 export 'src/rebuilds/rebuild_churn_tracker.dart' show RebuildChurnTracker;

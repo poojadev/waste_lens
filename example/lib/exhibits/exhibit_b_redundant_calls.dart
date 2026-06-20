@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:waste_lens/waste_lens.dart';
 import 'package:waste_lens_dio/waste_lens_dio.dart';
 
+import '../format.dart';
 import '../ledger_theme.dart';
 import '../widgets/dossier.dart';
 
@@ -74,7 +75,7 @@ class _ExhibitBRedundantCallsState extends State<ExhibitBRedundantCalls> {
             children: [
               _Stat('Network calls made', '${_adapter.networkCalls}'),
               _Stat('Redundant (this interceptor)', '${report.redundantCalls}'),
-              _Stat('Wasted', _formatBytes(report.wastedBytes)),
+              _Stat('Wasted', formatBytes(report.wastedBytes)),
               _Stat('Coalescing', _coalesce ? 'ON' : 'OFF',
                   tone: _coalesce ? Ledger.cleared : Ledger.charge),
             ],
@@ -109,12 +110,6 @@ class _ExhibitBRedundantCallsState extends State<ExhibitBRedundantCalls> {
         ),
       ],
     );
-  }
-
-  static String _formatBytes(int bytes) {
-    if (bytes <= 0) return '0 B';
-    if (bytes < 1024) return '$bytes B';
-    return '${(bytes / 1024).toStringAsFixed(1)} KB';
   }
 }
 
