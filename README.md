@@ -1,5 +1,11 @@
 # waste_lens
 
+[![CI](https://github.com/poojadev/waste_lens/actions/workflows/ci.yml/badge.svg)](https://github.com/poojadev/waste_lens/actions/workflows/ci.yml)
+[![pub: waste_lens](https://img.shields.io/pub/v/waste_lens.svg?label=waste_lens)](https://pub.dev/packages/waste_lens)
+[![pub: waste_lens_dio](https://img.shields.io/pub/v/waste_lens_dio.svg?label=waste_lens_dio)](https://pub.dev/packages/waste_lens_dio)
+[![pub: waste_lens_lints](https://img.shields.io/pub/v/waste_lens_lints.svg?label=waste_lens_lints)](https://pub.dev/packages/waste_lens_lints)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A Flutter developer-tooling package set for catching **wasted work** — dead
 widget rebuilds, redundant API calls, memory leaks, and memory pressure —
 surfaced live in-app and exportable as a report.

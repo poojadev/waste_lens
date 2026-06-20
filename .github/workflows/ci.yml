@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test core
+        run: flutter test packages/waste_lens
+
+      - name: Test dio add-on
+        run: flutter test packages/waste_lens_dio
+
+      - name: Test lints add-on
+        run: flutter test packages/waste_lens_lints
+
+      - name: Test example
+        run: flutter test example
