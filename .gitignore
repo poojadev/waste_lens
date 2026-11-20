@@ -60,3 +60,6 @@ web/
 # (the root is a pub workspace container, not an app)
 /lib/
 /test/
+
+# Per-package build output from `flutter test`
+packages/*/build/

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 
 import 'diagnostic_event.dart';
 import 'ring_buffer.dart';
@@ -77,7 +78,7 @@ class WasteAggregates extends ChangeNotifier {
           _churnEvents++;
         }
     }
-    notifyListeners();
+    _notifySafely();
   }
 
   /// Resets every counter and the sparkline series.
@@ -92,6 +93,54 @@ class WasteAggregates extends ChangeNotifier {
     _latestMaxRssBytes = 0;
     _imageCache = null;
     rssSeries.clear();
-    notifyListeners();
+    _notifySafely();
+  }
+
+  bool _notifyScheduled = false;
+  bool _disposed = false;
+
+  /// Notifies listeners now, or right after the current frame if Flutter is
+  /// in the middle of building.
+  ///
+  /// Events can arrive mid-build: `DeadRebuildProbe` reports from
+  /// `didUpdateWidget`. Notifying then would make the overlay call
+  /// `markNeedsBuild` on a widget outside the current build scope, which
+  /// Flutter rejects with "setState() or markNeedsBuild() called during
+  /// build". So during a frame we coalesce every notification into ONE
+  /// post-frame callback. The counters above already updated synchronously,
+  /// so `exportReport()` stays accurate either way.
+  void _notifySafely() {
+    if (_disposed) return;
+    if (!_isMidFrame) {
+      notifyListeners();
+      return;
+    }
+    if (_notifyScheduled) return;
+    _notifyScheduled = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _notifyScheduled = false;
+      if (!_disposed) notifyListeners();
+    });
+  }
+
+  /// True while Flutter is building/laying out/painting a frame, or running
+  /// the microtasks flushed in the middle of one.
+  static bool get _isMidFrame {
+    final SchedulerBinding binding;
+    try {
+      binding = SchedulerBinding.instance;
+    } on FlutterError {
+      // No binding (plain Dart tests): there is no frame, notify immediately.
+      return false;
+    }
+    final phase = binding.schedulerPhase;
+    return phase == SchedulerPhase.persistentCallbacks ||
+        phase == SchedulerPhase.midFrameMicrotasks;
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 }
