@@ -54,6 +54,38 @@ void main() {
     expect(find.text('No wasted rebuilds — yet.'), findsOneWidget);
   });
 
+  testWidgets('expanded panel stays fully on-screen from the default corner',
+      (tester) async {
+    const screen = Size(800, 600);
+    await pump(tester); // bubble defaults to the bottom-right corner
+    await tester.tap(find.byType(WasteOverlay));
+    await tester.pump();
+
+    final rect = tester.getRect(find.byType(OverlayPanel));
+    expect(rect.left, greaterThanOrEqualTo(0));
+    expect(rect.top, greaterThanOrEqualTo(0));
+    expect(rect.right, lessThanOrEqualTo(screen.width));
+    expect(rect.bottom, lessThanOrEqualTo(screen.height));
+  });
+
+  testWidgets('dragging past an edge does not strand the bubble',
+      (tester) async {
+    await pump(tester);
+    final overlay = find.byType(WasteOverlay);
+
+    // Shove the bubble far past the top-left corner.
+    await tester.drag(overlay, const Offset(-5000, -5000));
+    await tester.pump();
+
+    // A small opposite drag must move it immediately (no "debt" to pay back).
+    final before = tester.getTopLeft(overlay);
+    await tester.drag(overlay, const Offset(40, 40));
+    await tester.pump();
+    final after = tester.getTopLeft(overlay);
+    expect(after.dx, greaterThan(before.dx));
+    expect(after.dy, greaterThan(before.dy));
+  });
+
   testWidgets('exportReport returns the aggregate shape', (tester) async {
     await pump(tester);
 

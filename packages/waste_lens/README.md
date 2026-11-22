@@ -67,6 +67,24 @@ DeadRebuildProbe(
 The probe outlines the subtree in amber for a moment when it catches a dead
 rebuild — caught red-handed.
 
+### Jank Radar
+
+Watches real frame timings and flags dropped frames, classifying each as
+**build-bound** (Dart UI work — usually your wasted rebuilds) or
+**raster-bound** (GPU overdraw, large images, shaders). Build-bound jank is the
+user-visible cost of the waste the other modules hunt. The overlay's **JANK**
+tab shows the jank rate, worst frame, and the build-vs-raster split.
+
+```dart
+WasteLens(
+  config: WasteLensConfig(
+    jank: true,
+    jankBudget: Duration(milliseconds: 16), // 8ms for 120fps
+  ),
+  child: const MyApp(),
+);
+```
+
 ### Memory
 
 RSS sampling (every mode), image-cache pressure, and a best-effort VM-service

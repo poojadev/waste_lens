@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
 
 import '../core/gate.dart';
@@ -21,7 +23,11 @@ class WasteOverlay extends StatefulWidget {
 }
 
 class _WasteOverlayState extends State<WasteOverlay> {
-  Offset? _position; // null until first layout positions it bottom-right
+  static const double _bubbleW = 72;
+  static const double _bubbleH = 44;
+  static const double _margin = 12;
+
+  Offset? _position; // top-left of the bubble; null until first positioned
   bool _expanded = false;
 
   WasteAggregates get _agg => widget.runtime.bus.aggregates;
@@ -32,28 +38,83 @@ class _WasteOverlayState extends State<WasteOverlay> {
 
     final media = MediaQuery.maybeOf(context);
     final size = media?.size ?? const Size(400, 800);
-    final pos = _position ??= Offset(size.width - 76, size.height - 140);
+    final insets = media?.padding ?? EdgeInsets.zero;
+
+    // Default to the bottom-right corner, then keep the stored position inside
+    // the safe area on every build (so rotation/resize can't strand it).
+    final bounds = _bubbleBounds(size, insets);
+    final pos = _clampToRect(
+      _position ?? Offset(bounds.right, bounds.bottom),
+      bounds,
+    );
+    _position = pos; // persist the clamped value so dragging never "sticks"
+
+    if (_expanded) {
+      final panelOrigin = _panelOrigin(pos, size, insets);
+      return Positioned(
+        left: panelOrigin.dx,
+        top: panelOrigin.dy,
+        child: OverlayPanel(
+          runtime: widget.runtime,
+          onClose: () => setState(() => _expanded = false),
+        ),
+      );
+    }
 
     return Positioned(
-      left: pos.dx.clamp(0.0, (size.width - 64).clamp(0.0, double.infinity)),
-      top: pos.dy.clamp(0.0, (size.height - 64).clamp(0.0, double.infinity)),
+      left: pos.dx,
+      top: pos.dy,
       child: GestureDetector(
         onPanUpdate: (details) {
-          setState(() => _position = (_position ?? pos) + details.delta);
+          setState(() {
+            _position = _clampToRect(pos + details.delta, bounds);
+          });
         },
-        child: _expanded ? _panel() : _bubble(),
+        child: _bubble(),
       ),
     );
   }
 
-  Widget _panel() {
-    return Align(
-      alignment: Alignment.topRight,
-      child: OverlayPanel(
-        runtime: widget.runtime,
-        onClose: () => setState(() => _expanded = false),
-      ),
+  /// The allowed rectangle for the bubble's top-left corner.
+  Rect _bubbleBounds(Size size, EdgeInsets insets) {
+    final left = insets.left + _margin;
+    final top = insets.top + _margin;
+    final right =
+        math.max(left, size.width - insets.right - _bubbleW - _margin);
+    final bottom =
+        math.max(top, size.height - insets.bottom - _bubbleH - _margin);
+    return Rect.fromLTRB(left, top, right, bottom);
+  }
+
+  static Offset _clampToRect(Offset o, Rect r) =>
+      Offset(o.dx.clamp(r.left, r.right), o.dy.clamp(r.top, r.bottom));
+
+  /// Places the expanded panel next to the bubble but fully on-screen: it opens
+  /// upward when the bubble is in the lower half and is clamped to the viewport.
+  Offset _panelOrigin(Offset bubble, Size size, EdgeInsets insets) {
+    final minX = insets.left + _margin;
+    final maxX = math.max(
+      minX,
+      size.width - insets.right - OverlayPanel.width - _margin,
     );
+    final minY = insets.top + _margin;
+    final maxY = math.max(
+      minY,
+      size.height - insets.bottom - OverlayPanel.maxHeight - _margin,
+    );
+
+    // Horizontally centre the panel on the bubble, then clamp.
+    final left =
+        (bubble.dx + _bubbleW / 2 - OverlayPanel.width / 2).clamp(minX, maxX);
+
+    // Open upward from a lower-half bubble, downward otherwise.
+    final openUp = bubble.dy > size.height / 2;
+    final rawTop = openUp
+        ? bubble.dy - OverlayPanel.maxHeight - _margin
+        : bubble.dy + _bubbleH + _margin;
+    final top = rawTop.clamp(minY, maxY);
+
+    return Offset(left, top);
   }
 
   Widget _bubble() {

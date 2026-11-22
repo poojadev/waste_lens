@@ -92,6 +92,14 @@ class WasteLensRuntime {
         'dead': a.deadRebuilds,
         'churnEvents': a.churnEvents,
       },
+      'jank': <String, Object?>{
+        'jankFrames': a.jankFrames,
+        'framesObserved': a.framesObserved,
+        'jankRate': a.jankRate,
+        'buildBound': a.buildBoundJank,
+        'rasterBound': a.rasterBoundJank,
+        'worstFrameMs': a.worstFrameMs,
+      },
     };
   }
 }

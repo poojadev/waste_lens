@@ -12,6 +12,7 @@ class WasteLensConfig {
     this.memory = true,
     this.leaks = true,
     this.rebuilds = true,
+    this.jank = true,
     this.overlay = true,
     this.deepMemoryProfiling = true,
     this.sampleInterval = const Duration(seconds: 1),
@@ -19,6 +20,7 @@ class WasteLensConfig {
     this.churnThreshold = 30,
     this.churnWindow = const Duration(seconds: 2),
     this.redundancyWindow = const Duration(seconds: 2),
+    this.jankBudget = const Duration(milliseconds: 16),
     this.sparklineCapacity = 60,
   })  : assert(churnThreshold > 0, 'churnThreshold must be positive'),
         assert(sparklineCapacity > 0, 'sparklineCapacity must be positive');
@@ -28,6 +30,7 @@ class WasteLensConfig {
       : memory = false,
         leaks = false,
         rebuilds = false,
+        jank = false,
         overlay = false,
         deepMemoryProfiling = false,
         sampleInterval = const Duration(seconds: 1),
@@ -35,6 +38,7 @@ class WasteLensConfig {
         churnThreshold = 30,
         churnWindow = const Duration(seconds: 2),
         redundancyWindow = const Duration(seconds: 2),
+        jankBudget = const Duration(milliseconds: 16),
         sparklineCapacity = 60;
 
   /// Sample RSS and image-cache stats.
@@ -45,6 +49,9 @@ class WasteLensConfig {
 
   /// Track widget rebuild churn (Tier A).
   final bool rebuilds;
+
+  /// Run the Jank Radar — flag dropped frames and split build- vs raster-bound.
+  final bool jank;
 
   /// Mount the draggable diagnostics overlay.
   final bool overlay;
@@ -70,6 +77,10 @@ class WasteLensConfig {
   /// redundant.
   final Duration redundancyWindow;
 
+  /// Per-frame budget for the Jank Radar; frames slower than this are flagged.
+  /// Default ~16 ms (60 fps); use 8 ms for 120 fps displays.
+  final Duration jankBudget;
+
   /// Number of points retained in the overlay sparkline.
   final int sparklineCapacity;
 
@@ -78,6 +89,7 @@ class WasteLensConfig {
     bool? memory,
     bool? leaks,
     bool? rebuilds,
+    bool? jank,
     bool? overlay,
     bool? deepMemoryProfiling,
     Duration? sampleInterval,
@@ -85,12 +97,14 @@ class WasteLensConfig {
     int? churnThreshold,
     Duration? churnWindow,
     Duration? redundancyWindow,
+    Duration? jankBudget,
     int? sparklineCapacity,
   }) {
     return WasteLensConfig(
       memory: memory ?? this.memory,
       leaks: leaks ?? this.leaks,
       rebuilds: rebuilds ?? this.rebuilds,
+      jank: jank ?? this.jank,
       overlay: overlay ?? this.overlay,
       deepMemoryProfiling: deepMemoryProfiling ?? this.deepMemoryProfiling,
       sampleInterval: sampleInterval ?? this.sampleInterval,
@@ -98,6 +112,7 @@ class WasteLensConfig {
       churnThreshold: churnThreshold ?? this.churnThreshold,
       churnWindow: churnWindow ?? this.churnWindow,
       redundancyWindow: redundancyWindow ?? this.redundancyWindow,
+      jankBudget: jankBudget ?? this.jankBudget,
       sparklineCapacity: sparklineCapacity ?? this.sparklineCapacity,
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../leaks/leak_watcher.dart';
 import '../memory/memory_module.dart';
+import '../perf/jank_tracker.dart';
 import '../rebuilds/rebuild_churn_tracker.dart';
 import 'diagnostic_event.dart' show AllocationSample;
 import '../overlay/waste_overlay.dart';
@@ -28,6 +29,7 @@ List<WasteModule> buildModules(WasteLensConfig config) {
         threshold: config.churnThreshold,
         window: config.churnWindow,
       ),
+    if (config.jank) JankTracker(budget: config.jankBudget),
     // The dio interceptor is added by the consumer to their Dio client.
   ];
 }

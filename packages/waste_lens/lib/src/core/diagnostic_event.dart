@@ -153,3 +153,47 @@ final class RebuildEvent extends DiagnosticEvent {
   /// A suggested fix, e.g. "wrap in const" or "narrow with select(...)".
   final String? fixHint;
 }
+
+/// What dominated the cost of a janky frame.
+enum JankKind {
+  /// The UI (Dart build/layout) phase overran — usually caused by wasted
+  /// rebuilds. Look at the rebuild tracker.
+  build,
+
+  /// The GPU raster phase overran — usually overdraw, large images, shaders,
+  /// or missing `RepaintBoundary`s.
+  raster,
+}
+
+/// A single frame that missed its budget (a dropped/janky frame), with the UI
+/// vs GPU split so the cost can be attributed.
+///
+/// Published on the bus for every janky frame. The rolling jank *rate* lives on
+/// [WasteAggregates] (which also counts smooth frames); this event is the
+/// per-incident signal for stream subscribers.
+final class JankEvent extends DiagnosticEvent {
+  const JankEvent({
+    required super.at,
+    required this.totalMs,
+    required this.buildMs,
+    required this.rasterMs,
+    required this.budgetMs,
+    required this.kind,
+  });
+
+  /// Total frame time (`FrameTiming.totalSpan`), in milliseconds.
+  final double totalMs;
+
+  /// Time in the UI/build phase (`FrameTiming.buildDuration`), in milliseconds.
+  final double buildMs;
+
+  /// Time in the GPU raster phase (`FrameTiming.rasterDuration`), in
+  /// milliseconds.
+  final double rasterMs;
+
+  /// The per-frame budget that was exceeded, in milliseconds.
+  final double budgetMs;
+
+  /// Which phase dominated the overrun.
+  final JankKind kind;
+}

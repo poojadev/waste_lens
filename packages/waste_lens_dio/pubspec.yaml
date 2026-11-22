@@ -2,7 +2,7 @@ name: waste_lens_dio
 description: >-
   Dio add-on for waste_lens: detect redundant API calls, coalesce in-flight
   duplicate requests, and report wasted bytes via the waste_lens overlay.
-version: 0.1.0
+version: 0.1.1
 repository: https://github.com/poojadev/waste_lens
 issue_tracker: https://github.com/poojadev/waste_lens/issues
 topics:
@@ -20,7 +20,7 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
-  waste_lens: ^0.1.0
+  waste_lens: ">=0.1.0 <0.3.0"
   dio: ^5.9.2
   crypto: ^3.0.6
   meta: ^1.17.0
