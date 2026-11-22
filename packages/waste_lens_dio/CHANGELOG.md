@@ -1,3 +1,8 @@
+## 0.1.1
+
+- Widen the `waste_lens` constraint to `>=0.1.0 <0.3.0` so it installs
+  alongside `waste_lens` 0.2.x (Jank Radar). No API changes.
+
 ## 0.1.0
 
 Initial release.

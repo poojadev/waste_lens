@@ -14,7 +14,7 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
-  waste_lens: ^0.1.0
+  waste_lens: ">=0.1.0 <0.3.0"
   waste_lens_dio: ^0.1.0
   dio: ^5.9.2
 

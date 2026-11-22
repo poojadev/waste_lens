@@ -19,11 +19,17 @@ class OverlayPanel extends StatefulWidget {
   final WasteLensRuntime runtime;
   final VoidCallback onClose;
 
+  /// Fixed panel width, used by the overlay to keep the panel on-screen.
+  static const double width = 280;
+
+  /// Maximum panel height, used by the overlay to keep the panel on-screen.
+  static const double maxHeight = 360;
+
   @override
   State<OverlayPanel> createState() => _OverlayPanelState();
 }
 
-enum _Tab { memory, leaks, api, rebuilds }
+enum _Tab { memory, leaks, api, rebuilds, jank }
 
 class _OverlayPanelState extends State<OverlayPanel> {
   _Tab _tab = _Tab.rebuilds; // lead with the flagship
@@ -33,8 +39,8 @@ class _OverlayPanelState extends State<OverlayPanel> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 280,
-      constraints: const BoxConstraints(maxHeight: 360),
+      width: OverlayPanel.width,
+      constraints: const BoxConstraints(maxHeight: OverlayPanel.maxHeight),
       decoration: BoxDecoration(
         color: OverlayTokens.panel,
         borderRadius: BorderRadius.circular(12),
@@ -60,6 +66,7 @@ class _OverlayPanelState extends State<OverlayPanel> {
                   _Tab.leaks => _leaks(),
                   _Tab.api => _api(),
                   _Tab.rebuilds => _rebuilds(),
+                  _Tab.jank => _jank(),
                 },
               ),
             ),
@@ -104,6 +111,7 @@ class _OverlayPanelState extends State<OverlayPanel> {
       child: Row(
         children: [
           _tabButton(_Tab.rebuilds, 'REBUILD'),
+          _tabButton(_Tab.jank, 'JANK'),
           _tabButton(_Tab.api, 'API'),
           _tabButton(_Tab.leaks, 'LEAK'),
           _tabButton(_Tab.memory, 'MEM'),
@@ -206,6 +214,45 @@ class _OverlayPanelState extends State<OverlayPanel> {
       children: [
         _stat('DEAD REBUILDS', '${a.deadRebuilds}', tone: OverlayTokens.charge),
         _stat('CHURN WARNINGS', '${a.churnEvents}'),
+      ],
+    );
+  }
+
+  Widget _jank() {
+    final a = _agg;
+    if (a.framesObserved == 0) {
+      return const _Empty('Watching frames…');
+    }
+    if (a.jankFrames == 0) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _stat('FRAMES', '${a.framesObserved}', tone: OverlayTokens.cleared),
+          const _Empty('No dropped frames — smooth.'),
+        ],
+      );
+    }
+    final pct = (a.jankRate * 100).toStringAsFixed(1);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _stat('JANKY FRAMES', '${a.jankFrames}', tone: OverlayTokens.verdict),
+        _stat('JANK RATE', '$pct%'),
+        _stat('WORST FRAME', '${a.worstFrameMs.toStringAsFixed(1)} ms',
+            tone: OverlayTokens.charge),
+        const SizedBox(height: 6),
+        _stat('BUILD-BOUND', '${a.buildBoundJank}', tone: OverlayTokens.charge),
+        _stat('RASTER-BOUND', '${a.rasterBoundJank}'),
+        if (a.buildBoundJank >= a.rasterBoundJank && a.buildBoundJank > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Mostly build-bound — see the REBUILD tab for wasted work.',
+              style: OverlayTokens.label.copyWith(
+                color: OverlayTokens.paper.withValues(alpha: 0.7),
+              ),
+            ),
+          ),
       ],
     );
   }

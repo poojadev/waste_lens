@@ -24,6 +24,11 @@ class WasteAggregates extends ChangeNotifier {
   int _latestRssBytes = 0;
   int _latestMaxRssBytes = 0;
   ImageCacheStat? _imageCache;
+  int _jankFrames = 0;
+  int _framesObserved = 0;
+  int _buildBoundJank = 0;
+  int _rasterBoundJank = 0;
+  double _worstFrameMs = 0;
 
   /// Total dead rebuilds proven by a [DeadRebuildProbe] (Tier B).
   int get deadRebuilds => _deadRebuilds;
@@ -52,6 +57,33 @@ class WasteAggregates extends ChangeNotifier {
   /// Most recent image-cache reading, when available.
   ImageCacheStat? get imageCache => _imageCache;
 
+  /// Frames that missed their budget (dropped frames).
+  int get jankFrames => _jankFrames;
+
+  /// Total frames observed by the jank tracker.
+  int get framesObserved => _framesObserved;
+
+  /// Janky frames dominated by the UI/build phase (usually wasted rebuilds).
+  int get buildBoundJank => _buildBoundJank;
+
+  /// Janky frames dominated by the GPU raster phase.
+  int get rasterBoundJank => _rasterBoundJank;
+
+  /// The slowest frame seen, in milliseconds.
+  double get worstFrameMs => _worstFrameMs;
+
+  /// Fraction of observed frames that were janky, in `[0, 1]`.
+  double get jankRate =>
+      _framesObserved == 0 ? 0 : _jankFrames / _framesObserved;
+
+  /// Records that [frames] more frames were observed (janky or not), so the
+  /// jank rate counts every frame while only janky frames ride the event bus.
+  void recordFramesObserved(int frames) {
+    if (frames <= 0) return;
+    _framesObserved += frames;
+    _notifySafely();
+  }
+
   /// Folds [event] into the running totals and notifies listeners.
   void ingest(DiagnosticEvent event) {
     switch (event) {
@@ -77,6 +109,14 @@ class WasteAggregates extends ChangeNotifier {
         } else {
           _churnEvents++;
         }
+      case JankEvent(:final totalMs, :final kind):
+        _jankFrames++;
+        if (totalMs > _worstFrameMs) _worstFrameMs = totalMs;
+        if (kind == JankKind.build) {
+          _buildBoundJank++;
+        } else {
+          _rasterBoundJank++;
+        }
     }
     _notifySafely();
   }
@@ -92,6 +132,11 @@ class WasteAggregates extends ChangeNotifier {
     _latestRssBytes = 0;
     _latestMaxRssBytes = 0;
     _imageCache = null;
+    _jankFrames = 0;
+    _framesObserved = 0;
+    _buildBoundJank = 0;
+    _rasterBoundJank = 0;
+    _worstFrameMs = 0;
     rssSeries.clear();
     _notifySafely();
   }

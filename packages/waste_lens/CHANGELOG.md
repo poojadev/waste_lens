@@ -1,3 +1,28 @@
+## 0.2.0
+
+### New — Jank Radar
+
+- `JankTracker`: a new module that watches real frame timings
+  (`SchedulerBinding.addTimingsCallback`) and flags dropped frames, classifying
+  each as **build-bound** (Dart UI work — usually wasted rebuilds) or
+  **raster-bound** (GPU/overdraw). Build-bound jank is the user-visible cost of
+  the waste the rest of the package hunts.
+- New overlay **JANK** tab: janky-frame count, jank rate, worst frame, and the
+  build-vs-raster split, pointing build-bound jank at the REBUILD tab.
+- Config: `jank` (on by default) and `jankBudget` (default ~16 ms / 60 fps;
+  set 8 ms for 120 fps). New aggregate getters (`jankFrames`, `jankRate`,
+  `buildBoundJank`, `rasterBoundJank`, `worstFrameMs`) and a `jank` section in
+  `exportReport()`.
+
+### Fixed — overlay
+
+- The expanded panel no longer opens off-screen. From the default bottom-right
+  bubble it now anchors on-screen, opening upward/inward and clamped to the
+  safe area.
+- Dragging the bubble past a screen edge no longer "strands" it (positions are
+  clamped on write, not just at paint), and rotation/resize can't leave it
+  off-screen.
+
 ## 0.1.2
 
 - Fix: `DeadRebuildProbe` with the overlay on threw
